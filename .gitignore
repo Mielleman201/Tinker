@@ -21,3 +21,5 @@ source/*.x
 source/*.make
 source/*-*
 usage
+build
+source/CMakeLists.txt
