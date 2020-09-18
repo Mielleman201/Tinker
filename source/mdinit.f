@@ -43,7 +43,7 @@ c
       implicit none
       integer i,j,k
       integer idyn,lext
-      integer size,next
+      integer size,next, nlist
       integer freeunit
       real*8 e,ekt,qterm
       real*8 maxwell,speed
@@ -56,6 +56,8 @@ c
       character*240 dynfile
       character*240 record
       character*240 string
+
+      if (.not. allocated(fgamma))  allocate (fgamma(n))
 c
 c
 c     set default parameters for the dynamics trajectory
@@ -97,6 +99,11 @@ c
       voltrial = 25
       volmove = 100.0d0
       volscale = 'MOLECULAR'
+
+      do i = 1, n
+         fgamma(i) = friction
+      end do
+      nlist = 0
 c
 c     check for keywords containing any altered parameters
 c
@@ -164,6 +171,15 @@ c
             call upcase (volscale)
          else if (keyword(1:9) .eq. 'PRINTOUT ') then
             read (string,*,err=10,end=10)  iprint
+         end if
+         if (keyword(1:6) .eq. 'FGAMMA ') then
+            string = record(next:240)
+            read (string,*,err=10,end=10)  (fgamma(k),k=nlist+1,n)
+c   99       continue
+c            do while (fgamma(nlist+1) .ne. 0)
+c               nlist = nlist + 1
+c               fgamma(nlist) = max(-n,min(n,fgamma(nlist)))
+c            end do
          end if
    10    continue
       end do

@@ -207,16 +207,16 @@ c
 c
 c     perform dynamic allocation of some global arrays
 c
-      if (first) then
-         first = .false.
-         if (.not. allocated(fgamma))  allocate (fgamma(n))
+c      if (first) then
+c         first = .false.
+c         if (.not. allocated(fgamma))  allocate (fgamma(n))
 c
 c     set the atomic friction coefficients to the global value
 c
-         do i = 1, n
-            fgamma(i) = friction
-         end do
-      end if
+c         do i = 1, n
+c            fgamma(i) = friction
+c         end do
+c      end if
 c
 c     set the value of the friction coefficient for each atom
 c
@@ -226,7 +226,7 @@ c     get the frictional and random terms for stochastic dynamics
 c
       do i = 1, nuse
          k = iuse(i)
-         gdt = fgamma(k) * dt / mass(k)
+         gdt = fgamma(k) * dt
 c
 c     stochastic dynamics reduces to simple MD for zero friction
 c
@@ -245,8 +245,8 @@ c
             if (gdt .ge. 0.05d0) then
                egdt = exp(-gdt)
                pfric(k) = egdt
-               vfric(k) = (1.0d0-egdt) * mass(k) / fgamma(k)
-               afric(k) = (dt-vfric(k)) * mass(k) / fgamma(k)
+               vfric(k) = (1.0d0-egdt) / fgamma(k)
+               afric(k) = (dt-vfric(k)) / fgamma(k)
                pterm = 2.0d0*gdt - 3.0d0 + (4.0d0-egdt)*egdt
                vterm = 1.0d0 - egdt**2
                rho = (1.0d0-egdt)**2 / sqrt(pterm*vterm)
@@ -265,9 +265,9 @@ c
                afric(k) = (gdt2/2.0d0 - gdt3/6.0d0 + gdt4/24.0d0
      &                       - gdt5/120.0d0 + gdt6/720.0d0
      &                       - gdt7/5040.0d0 + gdt8/40320.0d0
-     &                       - gdt9/362880.0d0) * mass(k)**2 / fgamma(k)**2
-               vfric(k) = dt - fgamma(k)*afric(k) / mass(k)
-               pfric(k) = 1.0d0 - fgamma(k)*vfric(k) / mass(k)
+     &                       - gdt9/362880.0d0) / fgamma(k)**2
+               vfric(k) = dt - fgamma(k)*afric(k)
+               pfric(k) = 1.0d0 - fgamma(k)*vfric(k)
                pterm = 2.0d0*gdt3/3.0d0 - gdt4/2.0d0
      &                    + 7.0d0*gdt5/30.0d0 - gdt6/12.0d0
      &                    + 31.0d0*gdt7/1260.0d0 - gdt8/160.0d0
@@ -288,7 +288,7 @@ c
 c     compute random terms to thermostat the nonzero friction case
 c
             ktm = boltzmann * kelvin / mass(k)
-            psig = sqrt(ktm*pterm) * mass(k) / fgamma(k)
+            psig = sqrt(ktm*pterm) / fgamma(k)
             vsig = sqrt(ktm*vterm)
             rhoc = sqrt(1.0d0 - rho*rho)
             do j = 1, 3
