@@ -50,8 +50,8 @@ c
       real*8, allocatable :: zold(:)
       real*8, allocatable :: pfric(:)
       real*8, allocatable :: vfric(:)
-      real*8, allocatable :: afric(:)
-      real*8, allocatable :: prand(:,:)
+c      real*8, allocatable :: afric(:)
+c      real*8, allocatable :: prand(:,:)
       real*8, allocatable :: vrand(:,:)
       real*8, allocatable :: derivs(:,:)
 c
@@ -63,30 +63,30 @@ c
       allocate (zold(n))
       allocate (pfric(n))
       allocate (vfric(n))
-      allocate (afric(n))
-      allocate (prand(3,n))
+c      allocate (afric(n))
+c      allocate (prand(3,n))
       allocate (vrand(3,n))
       allocate (derivs(3,n))
 c
 c     get frictional and random terms for position and velocity
 c
-      call sdterm (istep,dt,pfric,vfric,afric,prand,vrand)
+      call sdterm (istep,dt,pfric,vfric,vrand)
 c
 c     store the current atom positions, then find full-step
 c     positions and half-step velocities via modified Verlet
 c
-      do i = 1, nuse
-         k = iuse(i)
-         xold(k) = x(k)
-         yold(k) = y(k)
-         zold(k) = z(k)
-         x(k) = x(k) + v(1,k)*vfric(k) + a(1,k)*afric(k) + prand(1,k)
-         y(k) = y(k) + v(2,k)*vfric(k) + a(2,k)*afric(k) + prand(2,k)
-         z(k) = z(k) + v(3,k)*vfric(k) + a(3,k)*afric(k) + prand(3,k)
-         do j = 1, 3
-            v(j,k) = v(j,k)*pfric(k) + 0.5d0*a(j,k)*vfric(k)
-         end do
-      end do
+c      do i = 1, nuse
+c         k = iuse(i)
+c         xold(k) = x(k)
+c         yold(k) = y(k)
+c         zold(k) = z(k)
+c         x(k) = x(k) + v(1,k)*vfric(k) + a(1,k)*afric(k) + prand(1,k)
+c         y(k) = y(k) + v(2,k)*vfric(k) + a(2,k)*afric(k) + prand(2,k)
+c         z(k) = z(k) + v(3,k)*vfric(k) + a(3,k)*afric(k) + prand(3,k)
+c         do j = 1, 3
+c            v(j,k) = v(j,k)*pfric(k) + 0.5d0*a(j,k)*vfric(k)
+c         end do
+c      end do
 c
 c     get constraint-corrected positions and half-step velocities
 c
@@ -101,10 +101,19 @@ c     find the full-step velocities using modified Verlet
 c
       do i = 1, nuse
          k = iuse(i)
+         xold(k) = x(k)
+         yold(k) = y(k)
+         zold(k) = z(k)
          do j = 1, 3
             a(j,k) = -ekcal * derivs(j,k) / mass(k)
-            v(j,k) = v(j,k) + 0.5d0*a(j,k)*vfric(k) + vrand(j,k)
+c            v(j,k) = v(j,k) + 0.5d0*a(j,k)*vfric(k) + vrand(j,k)
+            v(j,k) = v(j,k) * pfric(k) + a(j,k)
+     &        * vfric(k) + vrand(j,k) * vfric(k) / mass(k)
          end do
+
+         x(k) = x(k) + dt * v(1,k)
+         y(k) = y(k) + dt * v(2,k)
+         z(k) = z(k) + dt * v(3,k)
       end do
 c
 c     correct internal virial to account for frictional forces
@@ -136,8 +145,8 @@ c
       deallocate (zold)
       deallocate (pfric)
       deallocate (vfric)
-      deallocate (afric)
-      deallocate (prand)
+c      deallocate (afric)
+c      deallocate (prand)
       deallocate (vrand)
       deallocate (derivs)
 c
@@ -173,7 +182,7 @@ c     "sdterm" finds the frictional and random terms needed to
 c     update positions and velocities during stochastic dynamics
 c
 c
-      subroutine sdterm (istep,dt,pfric,vfric,afric,prand,vrand)
+      subroutine sdterm (istep,dt,pfric,vfric,vrand)
       use atoms
       use atomid
       use bath
@@ -196,8 +205,8 @@ c
       real*8 rho,rhoc
       real*8 pfric(*)
       real*8 vfric(*)
-      real*8 afric(*)
-      real*8 prand(3,*)
+c      real*8 afric(*)
+c      real*8 prand(3,*)
       real*8 vrand(3,*)
       logical first
       external normal
@@ -227,77 +236,80 @@ c
       do i = 1, nuse
          k = iuse(i)
          gdt = fgamma(k) * dt
+
+         egdt = exp(-gdt)
+         pfric(k) = egdt
+         vfric(k) = (1.0d0 - egdt) / fgamma(k)
 c
 c     stochastic dynamics reduces to simple MD for zero friction
 c
-         if (gdt .le. 0.0d0) then
-            pfric(k) = 1.0d0
-            vfric(k) = dt
-            afric(k) = 0.5d0 * dt * dt
-            do j = 1, 3
-               prand(j,k) = 0.0d0
-               vrand(j,k) = 0.0d0
-            end do
+c         if (gdt .le. 0.0d0) then
+c            pfric(k) = 1.0d0
+c            vfric(k) = dt
+c            afric(k) = 0.5d0 * dt * dt
+c            do j = 1, 3
+c               prand(j,k) = 0.0d0
+c               vrand(j,k) = 0.0d0
+c            end do
 c
 c     analytical expressions when friction coefficient is large
 c
-         else
-            if (gdt .ge. 0.05d0) then
-               egdt = exp(-gdt)
-               pfric(k) = egdt
-               vfric(k) = (1.0d0-egdt) / fgamma(k)
-               afric(k) = (dt-vfric(k)) / fgamma(k)
-               pterm = 2.0d0*gdt - 3.0d0 + (4.0d0-egdt)*egdt
-               vterm = 1.0d0 - egdt**2
-               rho = (1.0d0-egdt)**2 / sqrt(pterm*vterm)
+c         else
+c            if (gdt .ge. 0.05d0) then
+c               egdt = exp(-gdt)
+c               pfric(k) = egdt
+c               vfric(k) = (1.0d0-egdt) / fgamma(k)
+c               afric(k) = (dt-vfric(k)) / fgamma(k)
+c               pterm = 2.0d0*gdt - 3.0d0 + (4.0d0-egdt)*egdt
+c               vterm = 1.0d0 - egdt**2
+c               rho = (1.0d0-egdt)**2 / sqrt(pterm*vterm)
 c
 c     use series expansions when friction coefficient is small
 c
-            else
-               gdt2 = gdt * gdt
-               gdt3 = gdt * gdt2
-               gdt4 = gdt2 * gdt2
-               gdt5 = gdt2 * gdt3
-               gdt6 = gdt3 * gdt3
-               gdt7 = gdt3 * gdt4
-               gdt8 = gdt4 * gdt4
-               gdt9 = gdt4 * gdt5
-               afric(k) = (gdt2/2.0d0 - gdt3/6.0d0 + gdt4/24.0d0
-     &                       - gdt5/120.0d0 + gdt6/720.0d0
-     &                       - gdt7/5040.0d0 + gdt8/40320.0d0
-     &                       - gdt9/362880.0d0) / fgamma(k)**2
-               vfric(k) = dt - fgamma(k)*afric(k)
-               pfric(k) = 1.0d0 - fgamma(k)*vfric(k)
-               pterm = 2.0d0*gdt3/3.0d0 - gdt4/2.0d0
-     &                    + 7.0d0*gdt5/30.0d0 - gdt6/12.0d0
-     &                    + 31.0d0*gdt7/1260.0d0 - gdt8/160.0d0
-     &                    + 127.0d0*gdt9/90720.0d0
-               vterm = 2.0d0*gdt - 2.0d0*gdt2 + 4.0d0*gdt3/3.0d0
-     &                    - 2.0d0*gdt4/3.0d0 + 4.0d0*gdt5/15.0d0
-     &                    - 4.0d0*gdt6/45.0d0 + 8.0d0*gdt7/315.0d0
-     &                    - 2.0d0*gdt8/315.0d0 + 4.0d0*gdt9/2835.0d0
-               rho = sqrt(3.0d0) * (0.5d0 - gdt/16.0d0
-     &                    - 17.0d0*gdt2/1280.0d0
-     &                    + 17.0d0*gdt3/6144.0d0
-     &                    + 40967.0d0*gdt4/34406400.0d0
-     &                    - 57203.0d0*gdt5/275251200.0d0
-     &                    - 1429487.0d0*gdt6/13212057600.0d0
-     &                    + 1877509.0d0*gdt7/105696460800.0d0)
-            end if
+c            else
+c               gdt2 = gdt * gdt
+c               gdt3 = gdt * gdt2
+c               gdt4 = gdt2 * gdt2
+c               gdt5 = gdt2 * gdt3
+c               gdt6 = gdt3 * gdt3
+c               gdt7 = gdt3 * gdt4
+c               gdt8 = gdt4 * gdt4
+c               gdt9 = gdt4 * gdt5
+c               afric(k) = (gdt2/2.0d0 - gdt3/6.0d0 + gdt4/24.0d0
+c     &                       - gdt5/120.0d0 + gdt6/720.0d0
+c     &                       - gdt7/5040.0d0 + gdt8/40320.0d0
+c     &                       - gdt9/362880.0d0) / fgamma(k)**2
+c               vfric(k) = dt - fgamma(k)*afric(k)
+c               pfric(k) = 1.0d0 - fgamma(k)*vfric(k)
+c               pterm = 2.0d0*gdt3/3.0d0 - gdt4/2.0d0
+c     &                    + 7.0d0*gdt5/30.0d0 - gdt6/12.0d0
+c     &                    + 31.0d0*gdt7/1260.0d0 - gdt8/160.0d0
+c     &                    + 127.0d0*gdt9/90720.0d0
+c               vterm = 2.0d0*gdt - 2.0d0*gdt2 + 4.0d0*gdt3/3.0d0
+c     &                    - 2.0d0*gdt4/3.0d0 + 4.0d0*gdt5/15.0d0
+c     &                    - 4.0d0*gdt6/45.0d0 + 8.0d0*gdt7/315.0d0
+c     &                    - 2.0d0*gdt8/315.0d0 + 4.0d0*gdt9/2835.0d0
+c               rho = sqrt(3.0d0) * (0.5d0 - gdt/16.0d0
+c     &                    - 17.0d0*gdt2/1280.0d0
+c     &                    + 17.0d0*gdt3/6144.0d0
+c     &                    + 40967.0d0*gdt4/34406400.0d0
+c     &                    - 57203.0d0*gdt5/275251200.0d0
+c     &                    - 1429487.0d0*gdt6/13212057600.0d0
+c     &                    + 1877509.0d0*gdt7/105696460800.0d0)
+c            end if
 c
 c     compute random terms to thermostat the nonzero friction case
 c
-            ktm = boltzmann * kelvin / mass(k)
-            psig = sqrt(ktm*pterm) / fgamma(k)
-            vsig = sqrt(ktm*vterm)
-            rhoc = sqrt(1.0d0 - rho*rho)
+            ktm = boltzmann * kelvin * mass(k)
+c            psig = sqrt(ktm*pterm) / fgamma(k)
+            vsig = sqrt(2.0d0 * ktm * fgamma(k) / dt)
+c            rhoc = sqrt(1.0d0 - rho*rho)
             do j = 1, 3
-               pnorm = normal ()
+c               pnorm = normal ()
                vnorm = normal ()
-               prand(j,k) = psig * pnorm
-               vrand(j,k) = vsig * (rho*pnorm+rhoc*vnorm)
+c               prand(j,k) = psig * pnorm
+               vrand(j,k) = vsig * vnorm
             end do
-         end if
       end do
       return
       end
