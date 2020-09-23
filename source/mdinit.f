@@ -173,13 +173,9 @@ c
             read (string,*,err=10,end=10)  iprint
          end if
          if (keyword(1:6) .eq. 'FGAMMA ') then
+c           Limit of the length, important!!! 
             string = record(next:240)
             read (string,*,err=10,end=10)  (fgamma(k),k=nlist+1,n)
-c   99       continue
-c            do while (fgamma(nlist+1) .ne. 0)
-c               nlist = nlist + 1
-c               fgamma(nlist) = max(-n,min(n,fgamma(nlist)))
-c            end do
          end if
    10    continue
       end do
