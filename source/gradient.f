@@ -28,8 +28,9 @@ c
       use rigid
       use vdwpot
       use virial
+      use qmmm
       implicit none
-      integer i,j
+      integer i,j,q
       real*8 energy,cutoff
       real*8 derivs(3,*)
 c
@@ -242,6 +243,9 @@ c
       if (use_metal)  call emetal1
       if (use_geom)  call egeom1
       if (use_extra)  call extra1
+
+      call qmmmreadforces()
+      q = 1
 c
 c     sum up to get the total energy and first derivatives
 c
@@ -251,8 +255,20 @@ c
      &          + eg + ex
       energy = esum
       do i = 1, n
-         do j = 1, 3
-            desum(j,i) = deb(j,i) + dea(j,i) + deba(j,i)
+         if ( ANY(qmlist==i) ) then
+            do j = 1, 3
+                  desum(j,i) = dev(j,i) - qmforces(j,q)
+     &                      + der(j,i) + dedsp(j,i) + dec(j,i)
+     &                      + decd(j,i) + ded(j,i) + dem(j,i)
+     &                      + dep(j,i) + dect(j,i) + derxf(j,i)
+     &                      + des(j,i) + delf(j,i)
+     &                      + deg(j,i) + dex(j,i) 
+                  derivs(j,i) = desum(j,i)
+            end do
+            q = q + 1
+         else
+            do j = 1, 3
+                  desum(j,i) = deb(j,i) + dea(j,i) + deba(j,i)
      &                      + deub(j,i) + deaa(j,i) + deopb(j,i)
      &                      + deopd(j,i) + deid(j,i) + deit(j,i)
      &                      + det(j,i) + dept(j,i) + debt(j,i)
@@ -262,8 +278,9 @@ c
      &                      + dep(j,i) + dect(j,i) + derxf(j,i)
      &                      + des(j,i) + delf(j,i)
      &                      + deg(j,i) + dex(j,i)
-            derivs(j,i) = desum(j,i)
-         end do
+                  derivs(j,i) = desum(j,i)
+            end do
+         end if
       end do
 c
 c     check for an illegal value for the total energy

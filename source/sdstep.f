@@ -36,10 +36,10 @@ c
       use virial
       use qmmm
       implicit none
-      integer i,j,k,q
+      integer i,j,k
       integer istep
       real*8 dt,term
-      real*8 epot,etot,qmepot
+      real*8 epot,etot
       real*8 eksum
       real*8 temp,pres
       real*8 vxx,vyy,vzz
@@ -53,7 +53,6 @@ c
       real*8, allocatable :: vfric(:)
       real*8, allocatable :: vrand(:,:)
       real*8, allocatable :: derivs(:,:)
-      real*8, allocatable :: qmderivs(:,:)
 c
 c
 c     perform dynamic allocation of some local arrays
@@ -65,7 +64,6 @@ c
       allocate (vfric(n))
       allocate (vrand(3,n))
       allocate (derivs(3,n))
-      allocate (qmderivs(3,n))
 c
 c     get frictional and random terms for position and velocity
 c
@@ -78,33 +76,20 @@ c
 c     get the potential energy and atomic forces
 c
       call gradient (epot,derivs)
-      call qmgradient (qmepot, qmderivs)
 c
 c     use Newton's second law to get the next accelerations;
 c     find the full-step velocities using modified Verlet
 c
-      call qmmmreadforces()
-      q = 1
       do i = 1, nuse
          k = iuse(i)
          xold(k) = x(k)
          yold(k) = y(k)
          zold(k) = z(k)
-         if ( ANY(qmlist==k) ) then
-            do j = 1, 3
-                  a(j,k) = (qmforces(j, q) - ekcal * 
-     &            qmderivs(j,k)) / mass(k)
-                  v(j,k) = v(j,k) * pfric(k) + a(j,k)
-     &            * vfric(k) + vrand(j,k) * vfric(k) / mass(k)
-            end do
-            q = q + 1
-         else
-            do j = 1, 3
-                  a(j,k) = -ekcal * derivs(j,k) / mass(k)
-                  v(j,k) = v(j,k) * pfric(k) + a(j,k)
-     &            * vfric(k) + vrand(j,k) * vfric(k) / mass(k)
-            end do
-         end if
+         do j = 1, 3
+            a(j,k) = -ekcal * derivs(j,k) / mass(k)
+            v(j,k) = v(j,k) * pfric(k) + a(j,k)
+     &      * vfric(k) + vrand(j,k) * vfric(k) / mass(k)
+         end do
 
          x(k) = x(k) + dt * v(1,k)
          y(k) = y(k) + dt * v(2,k)
@@ -143,7 +128,6 @@ c
       deallocate (vfric)
       deallocate (vrand)
       deallocate (derivs)
-      deallocate (qmderivs)
 c
 c     find the constraint-corrected full-step velocities
 c
