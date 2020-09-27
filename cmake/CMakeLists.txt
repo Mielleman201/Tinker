@@ -68,7 +68,7 @@ add_library(tinker
             pitors.f pme.f pmestuf.f pmpb.f polar.f polgrp.f polopt.f
             polpcg.f polpot.f poltcg.f polymer.f potent.f potfit.f pressure.f
             prmkey.f promo.f prtdyn.f prterr.f prtint.f prtmol2.f prtpdb.f
-            prtprm.f prtseq.f prtxyz.f ptable.f qmstuf.f qrfact.f quatfit.f
+            prtprm.f prtseq.f prtxyz.f ptable.f qmmm.f qmmmstuf.f qmgradient.f qmstuf.f qrfact.f quatfit.f
             random.f rattle.f readdyn.f readgau.f readgdma.f readint.f
             readmol.f readmol2.f readpdb.f readprm.f readseq.f readxyz.f
             refer.f repel.f replica.f reppot.f resdue.f respa.f restrn.f

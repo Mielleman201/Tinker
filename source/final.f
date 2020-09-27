@@ -111,6 +111,7 @@ c
       use vdw
       use vibs
       use warp
+      use qmmm
       implicit none
 c
 c
@@ -949,6 +950,11 @@ c
 c     deallocation of global arrays from module warp
 c
       if (allocated(m2))  deallocate (m2)
+c      
+c     deallocate qm arrays
+c
+      if (allocated(qmlist))  deallocate (qmlist)
+      if (allocated(qmforces))  deallocate (qmforces)
 c
 c     may need a pause to avoid closing the execution window
 c

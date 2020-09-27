@@ -40,6 +40,7 @@ c
       use units
       use uprior
       use usage
+      use qmmm
       implicit none
       integer i,j,k
       integer idyn,lext
@@ -77,6 +78,9 @@ c
       maxualt = 7
       use_ielscf = .false.
       iprint = 100
+      qmatoms = 0
+      qmfif = "qmforces"
+      qmcof = "qmcoords"
 c
 c     set default values for temperature and pressure control
 c
@@ -171,14 +175,33 @@ c
             call upcase (volscale)
          else if (keyword(1:9) .eq. 'PRINTOUT ') then
             read (string,*,err=10,end=10)  iprint
-         end if
-         if (keyword(1:6) .eq. 'FGAMMA ') then
+         else if (keyword(1:6) .eq. 'FGAMMA ') then
 c           Limit of the length, important!!! 
             string = record(next:240)
             read (string,*,err=10,end=10)  (fgamma(k),k=nlist+1,n)
+            if (debug) then
+               write (iout,11)  fgamma
+   11          format (/,' Langevin friction coefficients: '
+     &                  ,(*(3x, F8.5)))
+            end if
+         else if (keyword(1:8) .eq. 'QMATOMS ') then
+            read (string,*,err=10,end=10)  qmatoms
+         else if (keyword(1:7) .eq. 'QMLIST ') then
+c           Limit of the length, important!!! 
+            string = record(next:240)
+            if (.not. allocated(qmlist))  allocate (qmlist(qmatoms))
+            read (string,*,err=10,end=10)  (qmlist(k),k=nlist+1,qmatoms)
+         else if (keyword(1:10) .eq. 'QMFORCEIN ') then
+            read (string,*,err=10,end=10)  qmfif
+         else if (keyword(1:11) .eq. 'QMCOORDOUT ') then
+            read (string,*,err=10,end=10)  qmcof
          end if
    10    continue
       end do
+c
+c     call the qmmm init function
+c
+      call qmmminit()
 c
 c     make sure all atoms or groups have a nonzero mass
 c
