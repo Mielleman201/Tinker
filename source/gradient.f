@@ -244,8 +244,10 @@ c
       if (use_geom)  call egeom1
       if (use_extra)  call extra1
 
-      call qmmmreadforces()
-      q = 1
+      if (qmatoms > 0) then
+            call qmmmreadforces()
+            q = 1
+      end if
 c
 c     sum up to get the total energy and first derivatives
 c
@@ -258,11 +260,8 @@ c
          if ( ANY(qmlist==i) ) then
             do j = 1, 3
                   desum(j,i) = dev(j,i) - qmforces(j,q)
-     &                      + der(j,i) + dedsp(j,i) + dec(j,i)
-     &                      + decd(j,i) + ded(j,i) + dem(j,i)
-     &                      + dep(j,i) + dect(j,i) + derxf(j,i)
-     &                      + des(j,i) + delf(j,i)
-     &                      + deg(j,i) + dex(j,i) 
+     &                      + dec(j,i)
+     &                      + decd(j,i) + ded(j,i)
                   derivs(j,i) = desum(j,i)
             end do
             q = q + 1

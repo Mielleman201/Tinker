@@ -5,6 +5,10 @@
         use iounit
         use output
         use inform
+        use potent
+        use limits
+
+        if (.not. allocated(qmlist))  allocate (qmlist(qmatoms))
 
 c
 c       Write relevent data tot the console
@@ -20,6 +24,14 @@ c
             write(iout, 30) qmcof
    30       format (/, 'Coords will be written to:', A)
         end if
+
+        write(iout, 70) use_charge,use_chgdpl,use_dipole,
+     &             use_mpole,use_polar,use_chgtrn,use_rxnfld
+   70   format (/, 'Flags', (*(3x, L1)))
+
+           write(iout, 80) use_lights,use_clist
+   80   format (/, 'Flags', (*(3x, L1)))
+          
 
       end
 
@@ -84,6 +96,7 @@ c        write (icof,fstr(1:23))
             write (iout,40)
    40       format (/,' readforces  --  Unable to Find the forces',
      &                 ' Restart File')
+            call qmmmwritecoords()
             call fatal
         end if
 
@@ -92,9 +105,13 @@ c        write (icof,fstr(1:23))
    50       format (a240)
             read (record,*,err=60,end=60)  qmforces(1, i),
      &            qmforces(2, i),qmforces(3, i)
-        end do
+            qmforces(1, i) = qmforces(1, i)*hartree/bohr/avogadro
+            qmforces(2, i) = qmforces(2, i)*hartree/bohr/avogadro
+            qmforces(3, i) = qmforces(3, i)*hartree/bohr/avogadro
 
+        end do
    60   continue
+
         close (unit=ifif)
         return
       end
@@ -122,10 +139,10 @@ c        write (icof,fstr(1:23))
             sumcoord(2) = y(j)*mass(j)
             sumcoord(3) = z(j)*mass(j)
         end do
-        
-        qmmc(1) = sumcoords(1)/summass
-        qmmc(2) = sumcoords(2)/summass
-        qmmc(3) = sumcoords(3)/summass
+
+        qmmc(1) = sumcoord(1)/summass
+        qmmc(2) = sumcoord(2)/summass
+        qmmc(3) = sumcoord(3)/summass
 
         deallocate(sumcoord)
       end

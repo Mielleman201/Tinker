@@ -1770,6 +1770,7 @@ c
       use shunt
       use usage
       use virial
+      use qmmm
       implicit none
       integer i,j,k,kkk
       integer ii,in
@@ -1910,6 +1911,11 @@ c
             if (use_group)  call groups (proceed,fgrp,i,k,0,0,0,0)
             proceed = .true.
             if (proceed)  proceed = (usei .or. use(k))
+c
+c           Determine if this is an Q Q interaction, in which case we do NOT continue
+c
+            proceed = .not.(ANY(qmlist==i) .and. ANY(qmlist==k))
+            
 c
 c     compute the energy contribution for this interaction
 c

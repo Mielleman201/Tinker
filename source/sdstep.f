@@ -95,7 +95,9 @@ c
          y(k) = y(k) + dt * v(2,k)
          z(k) = z(k) + dt * v(3,k)
       end do
-      call qmmmwritecoords()
+      if (qmatoms > 0) then
+            call qmmmwritecoords()
+      end if
 c
 c     correct internal virial to account for frictional forces
 c

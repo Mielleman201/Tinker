@@ -269,7 +269,9 @@ c
       flush (iout)
 c
 c     integrate equations of motion to take a time step
-c
+c    
+
+      call qmmminit()
       do istep = 1, nstep
          if (integrate .eq. 'VERLET') then
             call verlet (istep,dt)

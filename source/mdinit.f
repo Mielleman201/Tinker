@@ -199,10 +199,6 @@ c           Limit of the length, important!!!
    10    continue
       end do
 c
-c     call the qmmm init function
-c
-      call qmmminit()
-c
 c     make sure all atoms or groups have a nonzero mass
 c
       if (integrate .eq. 'RIGIDBODY') then

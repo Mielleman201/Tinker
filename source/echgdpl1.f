@@ -31,6 +31,7 @@ c
       use units
       use usage
       use virial
+      use qmmm
       implicit none
       integer i,j,k
       integer i1,k1,k2
@@ -107,6 +108,12 @@ c
             if (proceed)  proceed = (use(i1) .or. use(k1) .or. use(k2))
             if (proceed)  proceed = (skip(k1).ne.i1 .and.
      &                                 skip(k2).ne.i1)
+c     
+c           Determine if this is an Q Q interaction, in which case we do NOT continue
+c           We only check if 1 dipole atom is qm
+c
+            proceed = .not.(ANY(qmlist==i1) .and. ANY(qmlist==k1))
+
 c
 c     compute the energy contribution for this interaction
 c
