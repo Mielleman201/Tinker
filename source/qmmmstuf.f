@@ -65,7 +65,6 @@ c        write (icof,fstr(1:23))
         use qmmm
         use mdstuf
         use usage
-        use qmmm
         use units
         integer i, j, k
         integer freeunit, ifif
@@ -98,4 +97,35 @@ c        write (icof,fstr(1:23))
    60   continue
         close (unit=ifif)
         return
+      end
+
+
+      subroutine qmmmcentreofmass()
+        use atoms
+        use atomid
+        use qmmm
+
+        integer i,j
+        real*8 summass
+        real*8, allocatable :: sumcoord(:)
+
+        if (.not. allocated(qmmc)) allocate (qmmc(3))
+        allocate(sumcoord(3))
+
+        summass = 0d0
+        sumcoord = 0d0
+
+        do i = 1, size(qmlist)
+            j = qmlist(i)
+            summass = summass + mass(j)
+            sumcoord(1) = x(j)*mass(j)
+            sumcoord(2) = y(j)*mass(j)
+            sumcoord(3) = z(j)*mass(j)
+        end do
+        
+        qmmc(1) = sumcoords(1)/summass
+        qmmc(2) = sumcoords(2)/summass
+        qmmc(3) = sumcoords(3)/summass
+
+        deallocate(sumcoord)
       end

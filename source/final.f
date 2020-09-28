@@ -955,6 +955,7 @@ c     deallocate qm arrays
 c
       if (allocated(qmlist))  deallocate (qmlist)
       if (allocated(qmforces))  deallocate (qmforces)
+      if (allocated(qmmc))  deallocate (qmmc)
 c
 c     may need a pause to avoid closing the execution window
 c
