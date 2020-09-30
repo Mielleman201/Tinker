@@ -88,7 +88,7 @@ c
          do j = 1, 3
             a(j,k) = -ekcal * derivs(j,k) / mass(k)
             v(j,k) = v(j,k) * pfric(k) + a(j,k)
-     &      * vfric(k) + vrand(j,k) * vfric(k) / mass(k)
+     &      * vfric(k)
          end do
 
          x(k) = x(k) + dt * v(1,k)
