@@ -10,7 +10,7 @@ First you will need to download and build FFTW3. Once you have downloaded and ex
 </ol>
 
 Now add the following line to your .bashrc (or just run it before building, idk):
-export PKG_CONFIG_PATH=/home/cuzzocrea/programs/fftw-3.3.8/build/
+export PKG_CONFIG_PATH=/home/$USER/.../fftw/
 
 Now download this repository and do the following:
 <ul>
