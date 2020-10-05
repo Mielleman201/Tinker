@@ -29,10 +29,13 @@ c
       use vdwpot
       use virial
       use qmmm
+      use inform
+      use output
       implicit none
       integer i,j,q
       real*8 energy,cutoff
       real*8 derivs(3,*)
+      real*8 forcecheck(3)
 c
 c
 c     zero out each of the potential energy components
@@ -263,8 +266,30 @@ c
      &                      + dec(j,i)
      &                      + decd(j,i) + ded(j,i)
                   derivs(j,i) = desum(j,i)
+                  forcecheck(j) = deb(j,i) + dea(j,i) + deba(j,i)
+     &                      + deub(j,i) + deaa(j,i) + deopb(j,i)
+     &                      + deopd(j,i) + deid(j,i) + deit(j,i)
+     &                      + det(j,i) + dept(j,i) + debt(j,i)
+     &                      + deat(j,i) + dett(j,i) + dev(j,i)
+     &                      + der(j,i) + dedsp(j,i) + dec(j,i)
+     &                      + decd(j,i) + ded(j,i) + dem(j,i)
+     &                      + dep(j,i) + dect(j,i) + derxf(j,i)
+     &                      + des(j,i) + delf(j,i)
+     &                      + deg(j,i) + dex(j,i)
             end do
+
+            write(iout, 20) q
+   20       format(/, 'Q-Atom number ', (I1))
+
             q = q + 1
+            
+            write (iout,30) derivs(1,i), derivs(2,i), derivs(3,i)
+   30       format (/,' champ forces ', (*(3x, F16.10)))
+
+            write (iout,40) forcecheck
+   40       format (/,' tinker forces ', (*(3x, F16.10)))
+
+
          else
             do j = 1, 3
                   desum(j,i) = deb(j,i) + dea(j,i) + deba(j,i)
