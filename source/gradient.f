@@ -281,6 +281,9 @@ c
             write(iout, 20) q
    20       format(/, 'Q-Atom number ', (I1))
 
+            write (iout,50) qmforces(1,q),qmforces(2,q),qmforces(3,q)
+   50       format (/,' read forces ', (*(3x, F16.10)))
+
             q = q + 1
             
             write (iout,30) derivs(1,i), derivs(2,i), derivs(3,i)
@@ -288,6 +291,7 @@ c
 
             write (iout,40) forcecheck
    40       format (/,' tinker forces ', (*(3x, F16.10)))
+
 
 
          else
