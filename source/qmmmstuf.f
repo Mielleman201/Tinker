@@ -105,9 +105,9 @@ c        write (icof,fstr(1:23))
    50       format (a240)
             read (record,*,err=60,end=60)  qmforces(1, i),
      &            qmforces(2, i),qmforces(3, i)
-            qmforces(1, i) = qmforces(1, i)*hartree/bohr/avogadro
-            qmforces(2, i) = qmforces(2, i)*hartree/bohr/avogadro
-            qmforces(3, i) = qmforces(3, i)*hartree/bohr/avogadro
+            qmforces(1, i) = qmforces(1, i)*hartree/bohr
+            qmforces(2, i) = qmforces(2, i)*hartree/bohr
+            qmforces(3, i) = qmforces(3, i)*hartree/bohr
 
         end do
    60   continue

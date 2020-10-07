@@ -282,10 +282,6 @@ c
             write(iout, 20) q
    20       format(/, 'Q-Atom number ', (I1))
 
-            qmforces(1, q) = qmforces(1, q)/hartree*bohr*avogadro
-            qmforces(2, q) = qmforces(2, q)/hartree*bohr*avogadro
-            qmforces(3, q) = qmforces(3, q)/hartree*bohr*avogadro
-
             write (iout,50) qmforces(1,q),qmforces(2,q),qmforces(3,q)
    50       format (/,' read forces ', (*(3x, F16.10)))
 
