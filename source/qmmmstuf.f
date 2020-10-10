@@ -40,8 +40,10 @@ c
         use qmmm
         use mdstuf
         use usage
-        use qmmm
         use units
+        use iounit
+        use output
+        use inform
         integer i, j, k
         integer freeunit, icof
         logical exist
@@ -78,6 +80,9 @@ c        write (icof,fstr(1:23))
         use mdstuf
         use usage
         use units
+        use iounit
+        use output
+        use inform
         integer i, j, k
         integer freeunit, ifif
         logical exist
