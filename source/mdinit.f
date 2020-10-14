@@ -284,6 +284,8 @@ c
             end do
          end do
       end if
+
+      call qmmminit()
 c
 c     initialize inertial extended Lagrangian method
 c

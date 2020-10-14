@@ -261,7 +261,7 @@ c
      &          + eg + ex
       energy = esum
       do i = 1, n
-         if ( ANY(qmlist==i) ) then
+         if ( qmatoms > 0 .and. ANY(qmlist==i) ) then
             do j = 1, 3
                   desum(j,i) = dev(j,i) - qmforces(j,q)
      &                      + dec(j,i)
