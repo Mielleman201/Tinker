@@ -49,8 +49,8 @@ c
       real*8, allocatable :: xold(:)
       real*8, allocatable :: yold(:)
       real*8, allocatable :: zold(:)
-      real*8, allocatable :: pfric(:)
-      real*8, allocatable :: vfric(:)
+      real*8, allocatable :: pfric(:,:)
+      real*8, allocatable :: vfric(:,:)
       real*8, allocatable :: vrand(:,:)
       real*8, allocatable :: derivs(:,:)
 c
@@ -60,8 +60,8 @@ c
       allocate (xold(n))
       allocate (yold(n))
       allocate (zold(n))
-      allocate (pfric(n))
-      allocate (vfric(n))
+      allocate (pfric(3,n))
+      allocate (vfric(3,n))
       allocate (vrand(3,n))
       allocate (derivs(3,n))
 c
@@ -87,8 +87,8 @@ c
          zold(k) = z(k)
          do j = 1, 3
             a(j,k) = -ekcal * derivs(j,k) / mass(k)
-            v(j,k) = v(j,k) * pfric(k) + a(j,k)
-     &      * vfric(k)
+            v(j,k) = v(j,k) * pfric(j, k) + a(j,k)
+     &      * vfric(j, k)
          end do
 
          x(k) = x(k) + dt * v(1,k)
@@ -103,7 +103,7 @@ c     correct internal virial to account for frictional forces
 c
       do i = 1, nuse
          k = iuse(i)
-         term = vfric(k)/dt - 1.0d0
+         term = ((vfric(1,k)*vfric(2,k)*vfric(3,k))**(1/3))/dt - 1.0d0
          vxx = term * x(k) * derivs(1,k)
          vyx = 0.5d0 * term * (y(k)*derivs(1,k)+x(k)*derivs(2,k))
          vzx = 0.5d0 * term * (z(k)*derivs(1,k)+x(k)*derivs(3,k))
@@ -170,8 +170,12 @@ c
       use stodyn
       use units
       use usage
+      use qmmm
+      use iounit
+      use output
+      use inform
       implicit none
-      integer i,j,k
+      integer i,j,k,q
       integer istep
       real*8 dt,ktm
       real*8 gdt,egdt
@@ -182,15 +186,19 @@ c
       real*8 pterm,vterm
       real*8 pnorm,vnorm
       real*8 normal
-      real*8 psig,vsig
+      real*8 psig
+      real*8 vsig(3)
       real*8 rho,rhoc
-      real*8 pfric(*)
-      real*8 vfric(*)
+      real*8 pfric(3,*)
+      real*8 vfric(3,*)
       real*8 vrand(3,*)
+      real*8 gam
       logical first
       external normal
       save first
       data first  / .true. /
+
+      q = 1
 c
 c     set the value of the friction coefficient for each atom
 c
@@ -200,20 +208,57 @@ c     get the frictional and random terms for stochastic dynamics
 c
       do i = 1, nuse
          k = iuse(i)
-         gdt = fgamma(k) * dt
 
-         egdt = exp(-gdt)
-         pfric(k) = egdt
-         vfric(k) = (1.0d0 - egdt) / fgamma(k)
-c
-c     compute random terms to thermostat the nonzero friction case
-c
-            ktm = boltzmann * kelvin * mass(k)
-            vsig = sqrt(2.0d0 * ktm * fgamma(k) / dt)
+
+
+         if ( qmatoms > 0 .and. ANY(qmlist==k) ) then
+            if (debug) then
+               write(iout, 10) q
+   10          format (/, 'Q-Atom number ', (I1))
+            end if
+
             do j = 1, 3
-               vnorm = normal ()
-               vrand(j,k) = vsig * vnorm
+               if (qmerrors(j, q) .ne. 0.0d0) then
+                  gam = (qmerrors(j,q)**2)*dt/2.0d0
+     &                  /boltzmann/kelvin/mass(k)
+                  gdt = gam*dt
+                  egdt = exp(-gdt)
+                  pfric(j, k) = egdt
+                  vfric(j, k) = (1.0d0 - egdt) / gam
+                  ktm = boltzmann * kelvin * mass(k)
+                  vsig(j) = sqrt(2.0d0 - egdt) / gam
+               else
+                  gam = fgamma(k)
+                  gdt = gam*dt
+                  egdt = exp(-gdt)
+                  pfric(j, k) = egdt
+                  vfric(j, k) = (1.0d0 - egdt) / gam
+                  ktm = boltzmann * kelvin * mass(k)
+                  vsig(j) = sqrt(2.0d0 - egdt) / gam
+               end if  
+
+               if (debug) then
+                  write(iout, 20) j,gam
+   20             format (/, ' Direction ', (I1), ' gamma: ', (F16.10))
+               end if
             end do
+            q = q + 1
+         else
+            do j = 1, 3
+               gam = fgamma(k)
+               gdt = gam*dt
+               egdt = exp(-gdt)
+               pfric(j, k) = egdt
+               vfric(j, k) = (1.0d0 - egdt) / gam
+               ktm = boltzmann * kelvin * mass(k)
+               vsig(j) = sqrt(2.0d0 - egdt) / gam
+            end do
+         end if
+
+         do j = 1, 3
+            vnorm = normal ()
+            vrand(j,k) = vsig(j) * vnorm
+         end do
       end do
       return
       end

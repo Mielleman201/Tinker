@@ -90,6 +90,7 @@ c        write (icof,fstr(1:23))
         character*240 record
 
         if (.not. allocated(qmforces))  allocate (qmforces(3, qmatoms))
+        if (.not. allocated(qmerrors))  allocate (qmerrors(3, qmatoms))
 
         ifif = freeunit ()
         file = qmfif
@@ -106,13 +107,21 @@ c        write (icof,fstr(1:23))
         end if
 
         do i = 1, qmatoms
+            qmerrors(1, i) = 0.0d0
+            qmerrors(2, i) = 0.0d0
+            qmerrors(3, i) = 0.0d0
+
             read (ifif,50)  record
    50       format (a240)
             read (record,*,err=60,end=60)  qmforces(1, i),
-     &            qmforces(2, i),qmforces(3, i)
+     &            qmforces(2, i),qmforces(3, i),
+     &            qmerrors(1,i),qmerrors(2,i),qmerrors(3,i)
             qmforces(1, i) = qmforces(1, i)*hartree/bohr
             qmforces(2, i) = qmforces(2, i)*hartree/bohr
             qmforces(3, i) = qmforces(3, i)*hartree/bohr
+            qmerrors(1, i) = qmerrors(1, i)*hartree*ekcal/bohr
+            qmerrors(2, i) = qmerrors(2, i)*hartree*ekcal/bohr
+            qmerrors(3, i) = qmerrors(3, i)*hartree*ekcal/bohr
 
         end do
    60   continue
@@ -122,7 +131,7 @@ c        write (icof,fstr(1:23))
       end
 
 
-      subroutine qmmmcentreofmass()
+      subroutine qmcentreofmass()
         use atoms
         use atomid
         use qmmm
@@ -150,4 +159,57 @@ c        write (icof,fstr(1:23))
         qmmc(3) = sumcoord(3)/summass
 
         deallocate(sumcoord)
+      end
+
+      subroutine qmmmakegrid()
+        use atoms
+        use atomid
+        use qmmm
+
+        integer i,j,k
+        real*8 maxx,maxy,maxz
+        integer cubesx,cubesy,cubesz
+        real*8 margin
+        real*8 cubesize
+
+        margin = 1.1d0
+c       cubesize in Angstrom
+c       later set this in keyfile
+        cubesize = 0.001d0
+
+        maxx = 0.0d0
+        maxy = 0.0d0
+        maxz = 0.0d0
+
+        call qmcentreofmass()
+
+        do i = 1, size(qmlist)
+           j = qmlist(i)
+
+           maxx = max(maxx, abs(x(j) - qmmc(1)))
+           maxy = max(maxy, abs(y(j) - qmmc(2)))
+           maxz = max(maxz, abs(z(j) - qmmc(3)))
+        end do
+
+        maxx = maxx * margin
+        maxy = maxy * margin
+        maxz = maxz * margin
+
+        cubesx = maxx/cubesize
+        cubesy = maxy/cubesize
+        cubesz = maxz/cubesize
+
+        if (.not. allocated(qmcoordgrid)) allocate (qmcoordgrid(3,
+     &          2*cubesx+1,2*cubesy+1,2*cubesz+1))
+
+        do i = 1, 2*cubesx+1 
+          do j = 1, 2*cubesy+1
+             do k = 1, 2*cubesz+1
+                qmcoordgrid(1,i,j,k) = (i - cubesx - 1) * cubesize
+                qmcoordgrid(2,i,j,k) = (j - cubesy - 1) * cubesize
+                qmcoordgrid(3,i,j,k) = (k - cubesz - 1) * cubesize
+             end do
+          end do
+        end do
+
       end
