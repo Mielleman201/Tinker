@@ -25,6 +25,7 @@ c
       use polar
       use units
       use usage
+      use qmmm
       implicit none
       integer i,j,k
       integer istep
@@ -119,6 +120,10 @@ c
                vpaux(j,k) = vpaux(j,k) + apaux(j,k)*dt_2
             end do
          end do
+      end if
+
+      if (qmatoms > 0) then
+            call qmmmwritecoords()
       end if
 c
 c     perform deallocation of some local arrays
