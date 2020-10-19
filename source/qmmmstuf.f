@@ -31,6 +31,9 @@ c
 
            write(iout, 80) use_lights,use_clist
    80   format (/, 'Flags', (*(3x, L1)))
+
+        write(iout, 90) use_stophat,use_smooth,use_vlist,use_lights
+   90   format (/, 'Flags', (*(3x, L1)))
           
 
       end

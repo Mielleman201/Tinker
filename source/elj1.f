@@ -832,6 +832,7 @@ c
       use vdw
       use vdwpot
       use virial
+      use qmmm
       implicit none
       integer i,j,k
       integer ii,iv,it
@@ -939,6 +940,7 @@ c
             proceed = .true.
             if (use_group)  call groups (proceed,fgrp,i,k,0,0,0,0)
             if (proceed)  proceed = (usei .or. use(k) .or. use(kv))
+            proceed = .not.(ANY(qmlist==i) .and. ANY(qmlist==k))
 c
 c     compute the energy contribution for this interaction
 c
@@ -1129,6 +1131,7 @@ c
       use vdw
       use vdwpot
       use warp
+      use qmmm
       implicit none
       integer i,j,k,ii,kk
       integer iv,kv,it,kt
@@ -1233,6 +1236,7 @@ c
             proceed = .true.
             if (use_group)  call groups (proceed,fgrp,i,k,0,0,0,0)
             if (proceed)  proceed = (usei .or. use(k) .or. use(kv))
+            proceed = .not.(ANY(qmlist==i) .and. ANY(qmlist==k))
 c
 c     compute the energy contribution for this interaction
 c
