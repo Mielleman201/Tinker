@@ -53,36 +53,6 @@ c
       allocate (zold(n))
       allocate (derivs(3,n))
 c
-c     store the current atom positions, then find half-step
-c     velocities and full-step positions via Verlet recursion
-c
-      do i = 1, nuse
-         k = iuse(i)
-         do j = 1, 3
-            v(j,k) = v(j,k) + a(j,k)*dt_2
-         end do
-         xold(k) = x(k)
-         yold(k) = y(k)
-         zold(k) = z(k)
-         x(k) = x(k) + v(1,k)*dt
-         y(k) = y(k) + v(2,k)*dt
-         z(k) = z(k) + v(3,k)*dt
-      end do
-c
-c     apply Verlet half-step updates for any auxiliary dipoles
-c
-      if (use_ielscf) then
-         do i = 1, nuse
-            k = iuse(i)
-            do j = 1, 3
-               vaux(j,k) = vaux(j,k) + aaux(j,k)*dt_2
-               vpaux(j,k) = vpaux(j,k) + apaux(j,k)*dt_2
-               uaux(j,k) = uaux(j,k) + vaux(j,k)*dt
-               upaux(j,k) = upaux(j,k) + vpaux(j,k)*dt
-            end do
-         end do
-      end if
-c
 c     get constraint-corrected positions and half-step velocities
 c
       if (use_rattle)  call rattle (dt,xold,yold,zold)
@@ -118,6 +88,37 @@ c
                apaux(j,k) = term * (uinp(j,k)-upaux(j,k))
                vaux(j,k) = vaux(j,k) + aaux(j,k)*dt_2
                vpaux(j,k) = vpaux(j,k) + apaux(j,k)*dt_2
+            end do
+         end do
+      end if
+
+c
+c     store the current atom positions, then find half-step
+c     velocities and full-step positions via Verlet recursion
+c
+      do i = 1, nuse
+         k = iuse(i)
+         do j = 1, 3
+            v(j,k) = v(j,k) + a(j,k)*dt_2
+         end do
+         xold(k) = x(k)
+         yold(k) = y(k)
+         zold(k) = z(k)
+         x(k) = x(k) + v(1,k)*dt
+         y(k) = y(k) + v(2,k)*dt
+         z(k) = z(k) + v(3,k)*dt
+      end do
+c
+c     apply Verlet half-step updates for any auxiliary dipoles
+c
+      if (use_ielscf) then
+         do i = 1, nuse
+            k = iuse(i)
+            do j = 1, 3
+               vaux(j,k) = vaux(j,k) + aaux(j,k)*dt_2
+               vpaux(j,k) = vpaux(j,k) + apaux(j,k)*dt_2
+               uaux(j,k) = uaux(j,k) + vaux(j,k)*dt
+               upaux(j,k) = upaux(j,k) + vpaux(j,k)*dt
             end do
          end do
       end if
